@@ -1,0 +1,282 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Algolia MCP Quick Reference
+
+## 🚀 Getting Started (Essential First Steps)
+
+```javascript
+// 1. Check user context
+await getUserInfo()
+
+// 2. Get available applications
+await getApplications()
+
+// 3. List indices for an application
+await listIndices({ applicationId: "YOUR_APP_ID" })
+
+// 4. Check index configuration
+await getSettings({ applicationId: "YOUR_APP_ID", indexName: "your_index" })
+```
+
+## 🔍 Search Patterns
+
+### Basic Search
+```javascript
+await searchSingleIndex({
+  applicationId: "YOUR_APP_ID",
+  indexName: "your_index",
+  requestBody: {
+    query: "search term",
+    hitsPerPage: 10
+  }
+})
+```
+
+### Advanced Search with Filters
+```javascript
+await searchSingleIndex({
+  applicationId: "YOUR_APP_ID",
+  indexName: "your_index",
+  requestBody: {
+    query: "search term",
+    hitsPerPage: 20,
+    filters: "category:electronics AND price < 500",
+    facets: ["category", "brand", "price_range"],
+    attributesToRetrieve: ["title", "price", "category"]
+  }
+})
+```
+
+### Search with Sorting
+```javascript
+// First ensure custom ranking is set
+await setCustomRanking({
+  applicationId: "YOUR_APP_ID",
+  indexName: "your_index",
+  customRanking: [{ attribute: "rating", direction: "desc" }]
+})
+
+// Then search
+await searchSingleIndex({
+  applicationId: "YOUR_APP_ID",
+  indexName: "your_index",
+  requestBody: {
+    query: "",
+    hitsPerPage: 10,
+    filters: "rating > 0"
+  }
+})
+```
+
+## 📊 Analytics Patterns
+
+### Get Popular Searches
+```javascript
+await getTopSearches({
+  applicationId: "YOUR_APP_ID",
+  region: "us", // or "eu"
+  index: "your_index",
+  startDate: "2024-01-01",
+  endDate: "2024-12-31",
+  limit: 10
+})
+```
+
+### Check Search Performance
+```javascript
+await getNoResultsRate({
+  applicationId: "YOUR_APP_ID",
+  region: "us",
+  index: "your_index",
+  startDate: "2024-01-01",
+  endDate: "2024-12-31"
+})
+```
+
+### Get Most Clicked Results
+```javascript
+await getTopHits({
+  applicationId: "YOUR_APP_ID",
+  region: "us",
+  index: "your_index",
+  startDate: "2024-01-01",
+  endDate: "2024-12-31",
+  search: "optional_search_term"
+})
+```
+
+## 🛠️ Data Management
+
+### Add Single Record
+```javascript
+await saveObject({
+  applicationId: "YOUR_APP_ID",
+  indexName: "your_index",
+  requestBody: {
+    title: "New Product",
+    category: "electronics",
+    price: 299.99,
+    // objectID will be auto-generated
+  }
+})
+```
+
+### Update Record
+```javascript
+await partialUpdateObject({
+  applicationId: "YOUR_APP_ID",
+  indexName: "your_index",
+  objectID: "existing_object_id",
+  requestBody: {
+    price: 249.99, // Only update specific fields
+    stock: 10
+  }
+})
+```
+
+### Batch Operations
+```javascript
+await batch({
+  applicationId: "YOUR_APP_ID",
+  indexName: "your_index",
+  requestBody: {
+    requests: [
+      {
+        action: "addObject",
+        body: { title: "Product 1", price: 100 }
+      },
+      {
+        action: "updateObject",
+        body: { objectID: "123", price: 150 }
+      }
+    ]
+  }
+})
+```
+
+## ⚙️ Index Configuration
+
+### Enable Faceting
+```javascript
+await setAttributesForFaceting({
+  applicationId: "YOUR_APP_ID",
+  indexName: "your_index",
+  attributesForFaceting: ["category", "brand", "price", "rating"],
+  strategy: "append" // or "replace"
+})
+```
+
+### Set Custom Ranking
+```javascript
+await setCustomRanking({
+  applicationId: "YOUR_APP_ID",
+  indexName: "your_index",
+  customRanking: [
+    { attribute: "rating", direction: "desc" },
+    { attribute: "popularity", direction: "desc" },
+    { attribute: "price", direction: "asc" }
+  ]
+})
+```
+
+## 🔍 Common Filter Examples
+
+| Use Case | Filter Expression |
+|----------|------------------|
+| Exact category | `"category:electronics"` |
+| Price range | `"price:10 TO 100"` |
+| Rating above 4 | `"rating > 4"` |
+| In stock only | `"availability:in_stock"` |
+| Multiple categories | `"category:electronics OR category:computers"` |
+| Exclude category | `"NOT category:clothing"` |
+| Complex filter | `"(category:electronics OR category:computers) AND price < 500 AND rating > 4"` |
+
+## 🎯 Facet Examples
+
+```javascript
+// Get facet counts
+facets: ["category", "brand", "price_range"]
+
+// Get all available facets
+facets: ["*"]
+
+// No facets (faster search)
+facets: []
+```
+
+## 🐛 Debugging Helpers
+
+### Check Why Results Are Ordered
+```javascript
+await searchSingleIndex({
+  applicationId: "YOUR_APP_ID",
+  indexName: "your_index",
+  requestBody: {
+    query: "search term",
+    getRankingInfo: true
+  }
+})
+```
+
+### Performance Monitoring
+```javascript
+// Check response processingTimeMS
+const response = await searchSingleIndex({...})
+console.log(`Search took ${response.processingTimeMS}ms`)
+```
+
+### Verify Index Settings
+```javascript
+const settings = await getSettings({
+  applicationId: "YOUR_APP_ID",
+  indexName: "your_index"
+})
+console.log("Custom ranking:", settings.customRanking)
+console.log("Faceting attributes:", settings.attributesForFaceting)
+```
+
+## ⚠️ Common Gotchas
+
+1. **Region Mismatch**: Use correct region (`us` or `eu`) for analytics calls
+2. **Filter Syntax**: Use quotes for string values: `"category:electronics"`
+3. **Date Formats**: Use `YYYY-MM-DD` format for analytics dates
+4. **Pagination**: Remember `page` is 0-based
+5. **Faceting**: Must configure `attributesForFaceting` before using facets
+6. **Custom Ranking**: Changes take effect immediately but may need re-indexing
+
+## 🚀 Performance Tips
+
+- Use `hitsPerPage` wisely (don't fetch more than needed)
+- Use `attributesToRetrieve` to limit response size
+- Enable faceting only for attributes you'll use
+- Use filters to reduce result sets
+- Consider typo tolerance settings for performance
+- Monitor `processingTimeMS` for optimization
+
+## 📈 Analytics Dashboard Queries
+
+```javascript
+// Monthly search volume
+await getTopSearches({
+  applicationId: "YOUR_APP_ID",
+  region: "us",
+  index: "your_index",
+  startDate: "2024-01-01",
+  endDate: "2024-01-31",
+  limit: 100
+})
+
+// Conversion tracking (if clicks enabled)
+await getTopHits({
+  applicationId: "YOUR_APP_ID",
+  region: "us",
+  index: "your_index",
+  clickAnalytics: true,
+  limit: 50
+})
+```
+
+Remember: Test all changes in a development environment first! 🛡️ 

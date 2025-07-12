@@ -1,0 +1,302 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Algolia MCP Integration Rules
+
+## Overview
+This project has access to Algolia MCP (Model Context Protocol) which provides direct access to Algolia's search and analytics APIs. Use these tools to interact with Algolia indices, search data, manage settings, and retrieve analytics.
+
+## Project Memory Management
+**IMPORTANT**: Always maintain project-specific Algolia configuration in `ALGOLIA_PROJECT_CONFIG.md`. This file should be created/updated automatically during discovery and kept current throughout the project.
+
+**DO NOT CREATE**: 
+- Python files (`.py`) 
+- JSON config files (`.json`)
+- Any files outside the project root
+- Any executable scripts
+
+**ONLY CREATE**: The markdown configuration file `ALGOLIA_PROJECT_CONFIG.md` in the project root.
+
+### Required Project Configuration File Structure:
+```markdown
+# Algolia Project Configuration
+
+## Application Details
+- **Application ID**: `YOUR_APP_ID`
+- **Application Name**: `Your App Name`
+- **Region**: `us` or `eu`
+- **Owner**: `true/false`
+
+## Available Indices
+- `index_name_1` - Description (X records)
+- `index_name_2` - Description (Y records)
+
+## Index Configurations
+### index_name_1
+- **Custom Ranking**: `desc(rating), desc(popularity)`
+- **Faceting Attributes**: `category, brand, price, rating`
+- **Searchable Attributes**: `title, description, category`
+- **Last Updated**: `YYYY-MM-DD`
+
+### index_name_2
+- **Custom Ranking**: `desc(date), asc(title)`
+- **Faceting Attributes**: `category, tags, author`
+- **Searchable Attributes**: `title, content, tags`
+- **Last Updated**: `YYYY-MM-DD`
+
+## Analytics Setup
+- **Analytics Region**: `us` or `eu`
+- **Click Analytics**: `enabled/disabled`
+- **Conversion Tracking**: `enabled/disabled`
+
+## Common Search Patterns
+- **Primary Search Index**: `index_name_1`
+- **Default Results Per Page**: `20`
+- **Default Facets**: `["category", "brand"]`
+- **Common Filters**: `"availability:in_stock"`
+
+## Recent Changes (make sure to only add changes there and never remove, it should be treated like a log of actions)
+- YYYY-MM-DD-TT: Updated custom ranking for index_name_1
+- YYYY-MM-DD-TT: Added faceting for price attribute
+
+## Notes
+- Add any project-specific notes, gotchas, or special considerations
+```
+
+### Project Memory Rules:
+1. **Always check** `ALGOLIA_PROJECT_CONFIG.md` exists before any operations
+2. **Create or update** this file during initial discovery (`getUserInfo`, `getApplications`, `listIndices`)
+3. **Update configuration** whenever index settings are modified
+4. **Reference stored values** instead of hardcoding in operations
+5. **Keep change log** of significant modifications
+
+### Configuration Generation Rules:
+When asked to "generate config", "set up Algolia", or "initialize Algolia MCP":
+1. **ONLY** create/update `ALGOLIA_PROJECT_CONFIG.md` in the project root
+2. **DO NOT** create any Python files, JSON files, or executable scripts
+3. Use the MCP tools to discover current application settings
+4. Format all information in the markdown structure shown above
+5. Save configuration data for future reference, not for execution
+
+## Available Tool Categories
+
+### Core Information
+- `getUserInfo` - Get current user information
+- `getApplications` - List all available Algolia applications
+- `listIndices` - List all indices in an application
+
+### Search & Data Management
+- `searchSingleIndex` - Search within a specific index
+- `saveObject` - Add new records to an index
+- `partialUpdateObject` - Update specific fields in existing records
+- `batch` - Perform multiple operations in one request
+- `multipleBatch` - Perform operations across multiple indices
+- `getSettings` - Retrieve index configuration
+- `searchRules` - Search for merchandising rules
+- `searchSynonyms` - Search for synonyms
+
+### Analytics & Insights
+- `getTopSearches` - Get most popular search queries
+- `getTopHits` - Get most clicked results
+- `getNoResultsRate` - Get percentage of searches with no results
+- `listABTests` - List A/B testing experiments
+
+### Configuration & Management
+- `setAttributesForFaceting` - Configure faceting attributes
+- `setCustomRanking` - Set custom ranking criteria
+- `listQuerySuggestionsConfigs` - Manage query suggestions
+- `getClustersStatus` - Check system health
+- `getIncidents` - Get service incidents
+
+## Best Practices
+
+### 1. Application Discovery
+Always start by discovering available applications:
+```
+First call getUserInfo to understand the user context
+Then call getApplications to see available applications
+Use listIndices to see what data is available
+```
+
+### 2. Search Queries
+- Use `searchSingleIndex` for all search operations
+- Structure requests with proper parameters:
+  - `query`: The search term
+  - `hitsPerPage`: Number of results (default 20, max 1000)
+  - `page`: For pagination
+  - `filters`: For filtering results
+  - `facets`: For faceted search
+
+### 3. Data Filtering
+- Use `filters` parameter for precise filtering: `"category:electronics AND price < 100"`
+- Use `facets` to get category counts: `["category", "brand"]`
+- Combine multiple filters with AND/OR logic
+
+### 4. Sorting and Ranking
+- Check index settings first with `getSettings` to understand current ranking
+- Use `setCustomRanking` to sort by specific attributes
+- Common patterns: `desc(rating)`, `asc(price)`, `desc(popularity)`
+
+### 5. Batch Operations
+- Use `batch` for multiple operations on same index
+- Use `multipleBatch` for operations across different indices
+- Batch operations are more efficient than individual calls
+
+### 6. Error Handling
+- Always check for application ID availability
+- Verify index names exist before operations
+- Handle empty search results gracefully
+- Check for proper permissions before write operations
+
+## Common Workflows
+
+### Project Initialization (First Time Setup)
+1. **Check for existing config**: Look for `ALGOLIA_PROJECT_CONFIG.md`
+2. **Discover application**: `getUserInfo()` → `getApplications()`
+3. **List available indices**: `listIndices({ applicationId })`
+4. **Get index settings**: `getSettings({ applicationId, indexName })` for each index
+5. **Create/update config file**: Save all discovered information to `ALGOLIA_PROJECT_CONFIG.md`
+6. **Verify setup**: Test search with discovered configuration
+
+### Basic Search Setup (Ongoing)
+1. **Reference config**: Check `ALGOLIA_PROJECT_CONFIG.md` for stored values
+2. **Use stored app ID**: Reference from config instead of hardcoding
+3. **Apply known settings**: Use configured facets, filters, and ranking
+4. **Perform search**: Execute with optimized parameters
+
+### Data Analysis
+1. Get top searches → Understand user behavior
+2. Get no results rate → Identify content gaps
+3. Get top hits → See most popular content
+4. Use analytics to inform search improvements
+
+### Index Configuration
+1. **Reference current config**: Check `ALGOLIA_PROJECT_CONFIG.md` for baseline
+2. **Get current settings**: `getSettings()` to verify live configuration
+3. **Make changes**: `setAttributesForFaceting()`, `setCustomRanking()`, etc.
+4. **Update config file**: Document changes with timestamp
+5. **Test changes**: Verify with search queries
+6. **Update change log**: Record what was modified and why
+
+### Configuration Management
+1. **Before any changes**: Always update `ALGOLIA_PROJECT_CONFIG.md` first
+2. **After changes**: Update both live settings and config file
+3. **Version control**: Track changes in the config file's change log
+4. **Rollback reference**: Keep notes for reverting changes if needed
+
+### Performance Optimization
+1. Use `hitsPerPage` wisely (don't over-fetch)
+2. Use filters to reduce result sets
+3. Leverage faceting for navigation
+4. Monitor analytics for optimization opportunities
+
+## Security Considerations
+- Never expose API keys in client-side code
+- Use appropriate filters to restrict data access
+- Validate all input parameters
+- Monitor usage through analytics
+
+## Response Handling
+- Always check `nbHits` for result count
+- Handle `exhaustiveNbHits` for large datasets
+- Use `page` and `nbPages` for pagination
+- Parse `_highlightResult` for search highlighting
+
+## Common Parameters Reference
+
+### Search Parameters
+- `query`: Search query string
+- `hitsPerPage`: Results per page (1-1000)
+- `page`: Page number (0-based)
+- `filters`: Filter expression
+- `facets`: Array of facet attributes
+- `attributesToRetrieve`: Limit returned fields
+- `typoTolerance`: Control typo tolerance
+- `synonyms`: Enable/disable synonyms
+
+### Filter Examples
+- Exact match: `"category:electronics"`
+- Numeric: `"price < 100"`
+- Range: `"price:10 TO 100"`
+- Multiple: `"category:electronics AND brand:apple"`
+- Negation: `"NOT category:clothing"`
+
+## Debugging Tips
+- Use `getRankingInfo: true` to understand ranking
+- Check `processingTimeMS` for performance
+- Review `params` in response to see applied parameters
+- Use `getSettings` to verify index configuration
+
+## Example Usage Patterns
+
+### Product Search (Using Stored Configuration)
+```javascript
+// Reference: Check ALGOLIA_PROJECT_CONFIG.md for stored values
+// Application ID: STORED_APP_ID
+// Index: products
+// Default facets: ["category", "brand", "price_range"]
+// Common filters: "availability:in_stock"
+
+searchSingleIndex({
+  applicationId: STORED_APP_ID, // From config file
+  indexName: "products", // From config file
+  requestBody: {
+    query: "laptop",
+    hitsPerPage: 20,
+    facets: ["category", "brand", "price_range"], // From config
+    filters: "availability:in_stock" // From config
+  }
+})
+```
+
+### Content Discovery (Using Stored Configuration)
+```javascript
+// Reference: Check ALGOLIA_PROJECT_CONFIG.md for region and index
+getTopSearches({
+  applicationId: STORED_APP_ID, // From config file
+  region: STORED_REGION, // From config file (us/eu)
+  index: "content", // From config file
+  startDate: "2024-01-01",
+  endDate: "2024-12-31"
+})
+```
+
+### Index Management (With Configuration Updates)
+```javascript
+// 1. Update ALGOLIA_PROJECT_CONFIG.md first
+// 2. Apply changes to live index
+// 3. Update config file with timestamp
+
+setAttributesForFaceting({
+  applicationId: STORED_APP_ID, // From config file
+  indexName: "products", // From config file
+  attributesForFaceting: ["category", "brand", "price", "rating"] // New addition
+})
+
+// Then update ALGOLIA_PROJECT_CONFIG.md:
+// - Add "rating" to faceting attributes
+// - Update "Last Updated" timestamp
+// - Add entry to "Recent Changes" log
+```
+
+### Configuration-Driven Operations
+```javascript
+// Always reference stored configuration for consistency
+// Read values from ALGOLIA_PROJECT_CONFIG.md and use them in MCP calls
+
+// Example: Use stored application ID from config file
+searchSingleIndex({
+  applicationId: "6IRHGG3XTA", // From ALGOLIA_PROJECT_CONFIG.md
+  indexName: "your_primary_index", // From ALGOLIA_PROJECT_CONFIG.md  
+  requestBody: {
+    query: searchTerm,
+    hitsPerPage: 20, // From ALGOLIA_PROJECT_CONFIG.md
+    facets: ["category", "brand"], // From ALGOLIA_PROJECT_CONFIG.md
+    filters: "availability:in_stock" // From ALGOLIA_PROJECT_CONFIG.md
+  }
+})
+```
+
+Remember: Always test changes in a development environment before applying to production indices. 
