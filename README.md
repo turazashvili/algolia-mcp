@@ -178,7 +178,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - [Algolia](https://www.algolia.com) for providing the MCP Server
-- [Cursor](https://cursor.dev) for the amazing AI-powered IDE
+- [Cursor](https://cursor.com) for the amazing AI-powered IDE
 
 ---
 
